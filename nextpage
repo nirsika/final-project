@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz System</title>
+    <style>
+        body {
+
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .quiz-container {
+
+            padding: 50px;
+            text-align: center;
+            background-image: url('https://www.quiz-maker.com/images/professional4.webp');
+            background-size: cover;
+            /* Make the background image cover the entire screen */
+            background-position: center;
+            /* Center the image */
+            background-repeat: no-repeat;
+            /* Do not repeat the image */
+            height: auto;
+            /* Full height of the viewport */
+           min-height: 85vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: rgb(16, 44, 104);
+            font-size: 3rem;
+
+        }
+
+        select,
+        button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 20px;
+        }
+
+        .submit-btn,
+        button {
+            background-color: #007bff;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            background-color:;
+        }
+
+        .quiz-screen {
+            display: none;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid rgb(2, 34, 68);
+            border-radius: 5px;
+            font-size: 20px;
+        }
+
+        .options button.correct {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .options button.wrong {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: red;
+            margin: 25px 0;
+        }
+         /* Style for unanswered questions */
+         .unanswered {
+            border: 2px solid red;
+            background-color: #ffcccc;
+        }
+        /* Timer styles */
+        #timer {
+            color: red;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        /* Button styles */
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div class="quiz-container">
+        <!-- Category and Level Selection -->
+        <div id="selection-screen">
+            <h1>Select a Category and Level</h1>
+            <label for="category-select">Category:</label>
+            <select id="category-select" onchange="loadLevels()">
+                <option value="">-- Select Category --</option>
+            </select>
+            <br>
+            <label for="level-select">Level:</label>
+            <select id="level-select" disabled>
+                <option value="">-- Select Level --</option>
+            </select>
+            <br>
+            <button onclick="startQuiz()" disabled id="start-button">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-screen">
+            <div id="timer" class="timer">Time Left: 10:00</div>
+            <form id="quiz-form"></form>
+            <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz categories and levels
+        const categories = {
+            "General": [
+                [
+                    { question: "Which is the national bird of Sri Lanka?", options: ["Peacock", "Hornbill", "Sri Lanka Junglefowl", "Eagle"], correct: 2 },
+                    { question: "What is the official currency of Sri Lanka?", options: ["Rupee", "Dollar", "Pound", "Yen"], correct: 0 },
+                    { question: "Which Sri Lankan city is known as the 'Cultural Capital'?", options: ["Colombo", "Kandy", "Galle", "Negombo"], correct: 1 },
+                    { question: "What is the name of the Sri Lankan tea that is famous worldwide?", options: ["Ceylon Tea", "Darjeeling Tea", "Earl Grey", "Chamomile Tea"], correct: 0 },
+                    { question: "Sri Lanka gained independence from which country in 1948?", options: ["United Kingdom", "Portugal", "Netherlands", "France"], correct: 0 },
+                    { question: "Which is the largest national park in Sri Lanka?", options: ["Yala National Park", "Wilpattu National Park", "Udawalawe National Park", "Horton Plains National Park"], correct: 1 },
+                    { question: "What is the name of the traditional Sri Lankan dance?", options: ["Ballet", "Kandyan Dance", "Salsa", "Bharatanatyam"], correct: 1 },
+                    { question: "Which famous Sri Lankan king built the ancient city of Anuradhapura?", options: ["King Dutugemunu", "King Vijayabahu", "King Parakramabahu", "King Kasyapa"], correct: 2 },
+                    { question: "Sri Lanka's first international airport is located in which city?", options: ["Colombo", "Kandy", "Negombo", "Galle"], correct: 2 },
+                    { question: "Which is the highest mountain in Sri Lanka?", options: ["Piduruthalagala", "Adam's Peak", "Horton Plains", "Knuckles Mountain"], correct: 0 }
+                ],
+                [
+                    { question: "Which Sri Lankan city is known for its famous spice gardens?", options: ["Galle", "Kandy", "Colombo", "Matale"], correct: 3 },
+                    { question: "What is the name of Sri Lanka's largest national park?", options: ["Yala National Park", "Wilpattu National Park", "Horton Plains National Park", "Udawalawe National Park"], correct: 1 },
+                    { question: "Which is the largest lake in Sri Lanka?", options: ["Kandy Lake", "Beira Lake", "Independence Square Lake", "Parakrama Samudra"], correct: 3 },
+                    { question: "Which Sri Lankan city is famous for its beaches and is a popular tourist destination?", options: ["Kandy", "Galle", "Negombo", "Trincomalee"], correct: 2 },
+                    { question: "What is the name of the international airport in Sri Lanka?", options: ["Bandaranaike International Airport", "Mattala Rajapaksa International Airport", "Colombo International Airport", "Negombo International Airport"], correct: 0 },
+                    { question: "What is the largest ethnic group in Sri Lanka?", options: ["Tamil", "Sinhala", "Muslim", "Burgher"], correct: 1 },
+                    { question: "Which famous Sri Lankan beach is known for its whale watching?", options: ["Mirissa", "Hikkaduwa", "Bentota", "Negombo"], correct: 0 },
+                    { question: "What is the name of the famous fort city in Sri Lanka that was a former colonial port?", options: ["Galle", "Colombo", "Jaffna", "Trincomalee"], correct: 0 },
+                    { question: "Which mountain range is located in the central highlands of Sri Lanka?", options: ["Knuckles Mountain Range", "Horton Plains", "Adam's Peak", "Sri Pada"], correct: 0 },
+                    { question: "Which is the primary export of Sri Lanka?", options: ["Tea", "Rubber", "Coconut", "Spices"], correct: 0 }
+                ],
+                [
+                    { question: "Which Sri Lankan city is known for its tea plantations and cool climate?", options: ["Kandy", "Nuwara Eliya", "Colombo", "Galle"], correct: 1 },
+                    { question: "Which Sri Lankan national park is home to a variety of wildlife including leopards and elephants?", options: ["Yala National Park", "Wilpattu National Park", "Horton Plains National Park", "Udawalawe National Park"], correct: 0 },
+                    { question: "Which river is the longest in Sri Lanka?", options: ["Mahaweli River", "Kelani River", "Walawe River", "Gal Oya River"], correct: 0 },
+                    { question: "What is the name of Sri Lanka's most famous festival for the Tamil community?", options: ["Vesak", "Deepavali", "Sinhala and Tamil New Year", "Pongal"], correct: 3 },
+                    { question: "Which Sri Lankan region is famous for producing rubber?", options: ["Central Province", "Southern Province", "Western Province", "Eastern Province"], correct: 0 },
+                    { question: "What is the capital of Sri Lanka?", options: ["Colombo", "Kandy", "Sri Jayawardenepura Kotte", "Galle"], correct: 2 },
+                    { question: "Which Sri Lankan beach is famous for its underwater coral gardens?", options: ["Hikkaduwa", "Bentota", "Trincomalee", "Mirissa"], correct: 0 },
+                    { question: "Which Sri Lankan city is known for its colonial Dutch architecture?", options: ["Galle", "Kandy", "Colombo", "Jaffna"], correct: 0 },
+                    { question: "What is the name of Sri Lanka's most famous cricket stadium?", options: ["Pallekele International Cricket Stadium", "Gaddafi Stadium", "R Premadasa Stadium", "Lord's Cricket Ground"], correct: 2 },
+                    { question: "Which Sri Lankan mountain is a popular destination for pilgrims?", options: ["Piduruthalagala", "Horton Plains", "Adam's Peak", "Knuckles Peak"], correct: 2 }
+                ]
+
+
+            ],
+            "Science": [
+                [
+                    { question: "What is the chemical symbol for water?", options: ["H2O", "O2", "CO2", "H2O2"], correct: 0 },
+                    { question: "Which planet is known as the Red Planet?", options: ["Earth", "Venus", "Mars", "Jupiter"], correct: 2 },
+                    { question: "What is the process by which plants make their food?", options: ["Respiration", "Digestion", "Photosynthesis", "Fermentation"], correct: 2 },
+                    { question: "Who developed the theory of relativity?", options: ["Isaac Newton", "Albert Einstein", "Nikola Tesla", "Galileo Galilei"], correct: 1 },
+                    { question: "What is the largest organ in the human body?", options: ["Heart", "Liver", "Skin", "Brain"], correct: 2 },
+                    { question: "What is the most abundant gas in the Earth's atmosphere?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], correct: 2 },
+                    { question: "What is the chemical formula of methane?", options: ["CH4", "C2H6", "C3H8", "CO2"], correct: 0 },
+                    { question: "Which organ is responsible for pumping blood in the human body?", options: ["Brain", "Lungs", "Heart", "Liver"], correct: 2 },
+                    { question: "Which element is essential for the production of thyroid hormones?", options: ["Iron", "Iodine", "Calcium", "Magnesium"], correct: 1 },
+                    { question: "What type of animal is a frog?", options: ["Reptile", "Mammal", "Amphibian", "Bird"], correct: 2 }
+                ],
+                [
+                    { question: "Which gas do plants absorb from the atmosphere during photosynthesis?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], correct: 1 },
+                    { question: "What is the speed of light in a vacuum?", options: ["300,000 km/s", "300,000 m/s", "150,000 km/s", "150,000 m/s"], correct: 0 },
+                    { question: "Which element is known as the 'king of chemicals'?", options: ["Oxygen", "Carbon", "Sulfur", "Nitrogen"], correct: 1 },
+                    { question: "What is the most common type of rock found in the Earth's crust?", options: ["Igneous", "Sedimentary", "Metamorphic", "Limestone"], correct: 0 },
+                    { question: "Which part of the human brain controls balance and coordination?", options: ["Cerebrum", "Cerebellum", "Medulla", "Thalamus"], correct: 1 },
+                    { question: "Which planet is the closest to the Sun?", options: ["Earth", "Venus", "Mercury", "Mars"], correct: 2 },
+                    { question: "What is the smallest unit of life?", options: ["Atom", "Molecule", "Cell", "Organelle"], correct: 2 },
+                    { question: "What is the boiling point of water in degrees Celsius?", options: ["90°C", "100°C", "110°C", "120°C"], correct: 1 },
+                    { question: "Which human sense is associated with the nose?", options: ["Sight", "Hearing", "Smell", "Touch"], correct: 2 },
+                    { question: "What is the primary function of red blood cells?", options: ["Fight infection", "Carry oxygen", "Digest food", "Regulate body temperature"], correct: 1 }
+                ],
+                [
+                    { question: "What is the chemical symbol for gold?", options: ["Au", "Ag", "Pb", "Fe"], correct: 0 },
+                    { question: "What is the hardest natural substance on Earth?", options: ["Diamond", "Iron", "Gold", "Platinum"], correct: 0 },
+                    { question: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Venus"], correct: 1 },
+                    { question: "Which element has the chemical symbol 'O'?", options: ["Oxygen", "Osmium", "Ozone", "Oxygenated"], correct: 0 },
+                    { question: "What is the most abundant gas in the Earth's atmosphere?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Argon"], correct: 1 },
+                    { question: "Which organ in the human body pumps blood?", options: ["Lungs", "Liver", "Heart", "Kidneys"], correct: 2 },
+                    { question: "What is the largest organ in the human body?", options: ["Brain", "Liver", "Skin", "Heart"], correct: 2 },
+                    { question: "Which gas do humans exhale?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], correct: 2 },
+                    { question: "How many planets are in the Solar System?", options: ["7", "8", "9", "10"], correct: 1 },
+                    { question: "What is the chemical formula for water?", options: ["H2O", "CO2", "O2", "CH4"], correct: 0 }
+                ]
+
+
+            ],
+            "Maths": [
+                [
+                    { question: "What is the value of pi to two decimal places?", options: ["3.14", "3.15", "3.16", "3.13"], correct: 0 },
+                    { question: "What is the square root of 64?", options: ["6", "7", "8", "9"], correct: 2 },
+                    { question: "What is 15% of 200?", options: ["20", "25", "30", "35"], correct: 1 },
+                    { question: "What is the result of 25 * 12?", options: ["300", "310", "325", "350"], correct: 0 },
+                    { question: "What is the sum of the angles in a triangle?", options: ["180°", "360°", "90°", "270°"], correct: 0 },
+                    { question: "What is the value of 7 squared?", options: ["49", "56", "63", "72"], correct: 0 },
+                    { question: "How many sides does a hexagon have?", options: ["5", "6", "7", "8"], correct: 1 },
+                    { question: "What is the perimeter of a square with side length 4 cm?", options: ["12 cm", "16 cm", "20 cm", "24 cm"], correct: 1 },
+                    { question: "What is the product of 9 and 6?", options: ["52", "54", "56", "58"], correct: 1 },
+                    { question: "What is the value of 10³?", options: ["100", "1000", "10000", "100000"], correct: 1 }
+                ],
+                [
+                    { question: "What is 45 + 67?", options: ["112", "111", "113", "114"], correct: 0 },
+                    { question: "What is the value of 8³?", options: ["512", "510", "5100", "500"], correct: 0 },
+                    { question: "What is the perimeter of a rectangle with length 8 cm and width 5 cm?", options: ["26 cm", "30 cm", "25 cm", "24 cm"], correct: 0 },
+                    { question: "What is the square root of 81?", options: ["8", "7", "9", "6"], correct: 2 },
+                    { question: "If x = 2 and y = 3, what is the value of 2x + 3y?", options: ["12", "13", "14", "11"], correct: 1 },
+                    { question: "What is the value of 100 ÷ 4?", options: ["25", "20", "30", "40"], correct: 0 },
+                    { question: "What is the next prime number after 7?", options: ["11", "9", "13", "8"], correct: 0 },
+                    { question: "What is the area of a circle with a radius of 3 cm? (Use π = 3.14)", options: ["28.26 cm²", "30.26 cm²", "31.42 cm²", "32.26 cm²"], correct: 0 },
+                    { question: "What is the value of 9 * 11?", options: ["99", "98", "100", "97"], correct: 0 },
+                    { question: "What is the value of 12 ÷ 2 + 5?", options: ["11", "10", "12", "13"], correct: 1 }
+                ],
+                [
+                    { question: "What is 12 * 12?", options: ["144", "142", "140", "136"], correct: 0 },
+                    { question: "What is the value of 15²?", options: ["225", "215", "235", "240"], correct: 0 },
+                    { question: "What is the value of 2⁵?", options: ["32", "35", "30", "25"], correct: 0 },
+                    { question: "What is the value of π (Pi)?", options: ["3.12", "3.14", "3.16", "3.18"], correct: 1 },
+                    { question: "What is the square of 11?", options: ["121", "112", "122", "125"], correct: 0 },
+                    { question: "What is the area of a triangle with base 10 cm and height 5 cm?", options: ["25 cm²", "50 cm²", "30 cm²", "45 cm²"], correct: 0 },
+                    { question: "What is the sum of angles in a triangle?", options: ["180°", "360°", "90°", "120°"], correct: 0 },
+                    { question: "What is the value of 3 * (5 + 2)?", options: ["21", "23", "22", "24"], correct: 0 },
+                    { question: "What is 1000 ÷ 50?", options: ["20", "15", "25", "30"], correct: 0 },
+                    { question: "What is the perimeter of a square with side length 8 cm?", options: ["32 cm", "24 cm", "16 cm", "20 cm"], correct: 0 }
+                ]
+            ],
+            "Technology": [
+                [
+                    { question: "Who is known as the father of the computer?", options: ["Charles Babbage", "Alan Turing", "Bill Gates", "Steve Jobs"], correct: 0 },
+                    { question: "What does 'HTTP' stand for in web addresses?", options: ["HyperText Transfer Protocol", "HyperText Text Protocol", "Home Text Transfer Protocol", "Home Text Technology Protocol"], correct: 0 },
+                    { question: "Which company developed the first personal computer?", options: ["Microsoft", "Apple", "IBM", "Dell"], correct: 1 },
+                    { question: "What does 'RAM' stand for in computer technology?", options: ["Random Access Memory", "Read Access Memory", "Ready Access Memory", "Range Access Memory"], correct: 0 },
+                    { question: "Which social media platform was founded by Mark Zuckerberg?", options: ["Twitter", "Instagram", "Facebook", "LinkedIn"], correct: 2 },
+                    { question: "What year was the first iPhone released?", options: ["2005", "2006", "2007", "2008"], correct: 2 },
+                    { question: "What does 'USB' stand for?", options: ["Universal Serial Bus", "Universal Service Bus", "Universal System Bus", "United Serial Bus"], correct: 0 },
+                    { question: "Which programming language is primarily used for Android app development?", options: ["Python", "Swift", "Java", "C#"], correct: 2 },
+                    { question: "What is the name of the first artificial satellite launched into space?", options: ["Apollo 11", "Sputnik 1", "Explorer 1", "Vostok 1"], correct: 1 },
+                    { question: "Which company was the first to launch a commercially available 5G network?", options: ["AT&T", "Verizon", "T-Mobile", "Sprint"], correct: 2 }
+                ],
+                [
+                    { question: "Which company is the creator of the Windows operating system?", options: ["Apple", "Microsoft", "Google", "IBM"], correct: 1 },
+                    { question: "What does 'Wi-Fi' stand for?", options: ["Wireless Fidelity", "Wide Fidelity", "Wireless Frequency", "World Fidelity"], correct: 0 },
+                    { question: "Which of the following is a programming language?", options: ["Linux", "Python", "Excel", "Word"], correct: 1 },
+                    { question: "Which company developed the Android operating system?", options: ["Google", "Apple", "Microsoft", "Samsung"], correct: 0 },
+                    { question: "What does 'GPS' stand for?", options: ["Global Positioning System", "Global Private System", "General Positioning System", "Geographic Positioning System"], correct: 0 },
+                    { question: "Which of the following is a web browser?", options: ["Facebook", "Twitter", "Chrome", "Instagram"], correct: 2 },
+                    { question: "What does 'URL' stand for in internet technology?", options: ["Universal Resource Locator", "Uniform Resource Locator", "Uniform Requisition Locator", "Universal Requisition Locator"], correct: 1 },
+                    { question: "Which company manufactures the iPhone?", options: ["Microsoft", "Apple", "Samsung", "Nokia"], correct: 1 },
+                    { question: "What does 'HTML' stand for?", options: ["HyperText Markup Language", "HyperTool Markup Language", "HyperText Modeling Language", "HyperText Marking Language"], correct: 0 },
+                    { question: "Which company is behind the creation of the 'Windows' operating system?", options: ["Apple", "IBM", "Microsoft", "Oracle"], correct: 2 }
+                ],
+                [
+                    { question: "What does 'CPU' stand for?", options: ["Central Processing Unit", "Central Power Unit", "Computer Processing Unit", "Central Program Unit"], correct: 0 },
+                    { question: "Who developed the first computer virus?", options: ["Bill Gates", "Gary McKinnon", "John von Neumann", "Fred Cohen"], correct: 3 },
+                    { question: "Which technology company is headquartered in Cupertino, California?", options: ["Microsoft", "Google", "Apple", "Facebook"], correct: 2 },
+                    { question: "What is the main function of an operating system?", options: ["Managing hardware", "Running applications", "Both of the above", "None of the above"], correct: 2 },
+                    { question: "What is the name of the virtual assistant developed by Amazon?", options: ["Siri", "Alexa", "Google Assistant", "Cortana"], correct: 1 },
+                    { question: "Which company created the first tablet computer?", options: ["Apple", "Microsoft", "IBM", "Samsung"], correct: 2 },
+                    { question: "What is the name of Facebook's parent company?", options: ["Meta", "WhatsApp", "Instagram", "Zuckerberg Inc."], correct: 0 },
+                    { question: "Which of the following is NOT an operating system?", options: ["Windows", "Linux", "Android", "Chrome"], correct: 3 },
+                    { question: "What is the function of a router in networking?", options: ["Directs internet traffic", "Stores data", "Displays web pages", "None of the above"], correct: 0 },
+                    { question: "Which programming language is primarily used for iOS app development?", options: ["Python", "Swift", "Java", "C#"], correct: 1 }
+                ]
+            ],
+        };
+
+
+        let selectedQuestions = [];
+        let score = 0;
+        let answeredQuestions = 0;
+        let timerInterval;
+
+        // Load categories into dropdown
+        function loadCategories() {
+            const categorySelect = document.getElementById("category-select");
+            Object.keys(categories).forEach(category => {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        // Load levels based on selected category
+        function loadLevels() {
+            const categorySelect = document.getElementById("category-select");
+            const levelSelect = document.getElementById("level-select");
+            const startButton = document.getElementById("start-button");
+
+            levelSelect.innerHTML = `<option value="">-- Select Level --</option>`;
+            levelSelect.disabled = true;
+            startButton.disabled = true;
+
+            if (categorySelect.value) {
+                const levels = categories[categorySelect.value];
+                levels.forEach((_, index) => {
+                    const option = document.createElement("option");
+                    option.value = index;
+                    option.textContent = `Level ${index + 1}`;
+                    levelSelect.appendChild(option);
+                });
+                levelSelect.disabled = false;
+            }
+
+            levelSelect.onchange = function () {
+                startButton.disabled = !(categorySelect.value && levelSelect.value);
+            };
+        }
+
+        // Start quiz
+        function startQuiz() {
+            const category = document.getElementById("category-select").value;
+            const level = document.getElementById("level-select").value;
+
+            if (category && level) {
+                selectedQuestions = categories[category][level];
+                document.getElementById("selection-screen").style.display = "none";
+                document.getElementById("quiz-screen").style.display = "block";
+                loadQuestions();
+                startTimer();
+            }
+        }
+
+        // Load questions into quiz form
+        function loadQuestions() {
+            const form = document.getElementById("quiz-form");
+            form.innerHTML = "";
+            selectedQuestions.forEach((q, index) => {
+                const questionHTML = `
+                    <div class="question">
+                        <p><strong>Q${index + 1}: ${q.question}</strong></p>
+                        <div class="options">
+                            ${q.options.map((option, i) => `
+                                <button type="button" onclick="checkAnswer(${index}, ${i}, this)">
+                                    ${option}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                form.innerHTML += questionHTML;
+            });
+            document.querySelector(".submit-btn").disabled = true;
+        }
+
+        // Check answer
+        function checkAnswer(questionIndex, selectedOption, button) {
+            const question = selectedQuestions[questionIndex];
+            const optionsButtons = button.parentNode.querySelectorAll("button");
+            optionsButtons.forEach(btn => btn.disabled = true);
+
+            if (selectedOption === question.correct) {
+                button.classList.add("correct");
+                score++;
+            } else {
+                button.classList.add("wrong");
+                optionsButtons[question.correct].classList.add("correct");
+            }
+
+            answeredQuestions++;
+            if (answeredQuestions === selectedQuestions.length) {
+                document.querySelector(".submit-btn").disabled = false;
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            let timeLeft = 600;
+            const timerElement = document.getElementById("timer");
+
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time's up!");
+                    submitQuiz();
+                } else {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    timerElement.textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+
+        // Submit quiz
+        function submitQuiz() {
+            clearInterval(timerInterval);
+
+            selectedQuestions.forEach((q, index) => {
+                const questionDiv = document.querySelectorAll(".question")[index];
+                const optionsButtons = questionDiv.querySelectorAll("button");
+                optionsButtons.forEach((button, i) => {
+                    if (!button.classList.contains("correct") && !button.classList.contains("wrong")) {
+                        if (i === q.correct) button.classList.add("correct");
+                    }
+                });
+            });
+
+            document.getElementById("result").innerHTML = `
+                <h2>Your Score: ${score} / ${selectedQuestions.length}</h2>
+                <button onclick="goBack()">Back</button>
+            `;
+            document.getElementById("quiz-form").style.display = "none";
+            document.querySelector(".submit-btn").style.display = "none";
+        }
+
+         
+        
+        // Go back to selection screen
+        function goBack() {
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("selection-screen").style.display = "block";
+            document.getElementById("quiz-form").style.display = "block";
+            document.querySelector(".submit-btn").style.display = "inline-block";
+            document.getElementById("result").innerHTML = "";
+            score = 0;
+            answeredQuestions = 0;
+        }
+
+        loadCategories();
+
+    </script>
+     
+
+</body>
+
+</html>
